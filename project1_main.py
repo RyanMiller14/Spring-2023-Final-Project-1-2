@@ -1,5 +1,6 @@
 from project1_controller import *
 
+
 def main():
     app = QApplication([])
     window = Controller()
