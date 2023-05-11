@@ -121,8 +121,6 @@ class Controller(QMainWindow, Ui_mainWindow):
                         QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{numpad_num}.wmv')).absolute()))))
                     self.mediaPlayer.play()
                     self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
-                else:
-                    pass
             else:
                 self.label_info.setText(f'Channel {numpad_num} not currently available')
     def channel_list(self):
