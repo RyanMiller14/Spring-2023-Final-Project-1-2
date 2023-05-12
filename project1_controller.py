@@ -9,13 +9,22 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 
 class Controller(QMainWindow, Ui_mainWindow):
-
+    """
+    A class that determines both volume and channel limit values, as well as defines methods for buttons on the GUI.
+    """
     MIN_VOLUME = 0
     MAX_VOLUME = 100
     MIN_CHANNEL = 1
     MAX_CHANNEL = 5
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Constructor to create initial state of the GUI controller.
+        VideoWidget and mediaPlayer are created.
+        Checks and handles button input.
+        :param args: Collects all arguments from user input with the GUI.
+        :param kwargs: Collects all key arguments from user input with the GUI.
+        """
         super().__init__(*args, **kwargs)
         self.setupUi(self)
 
@@ -42,7 +51,6 @@ class Controller(QMainWindow, Ui_mainWindow):
         self.numpad_8.clicked.connect(lambda: self.numpad_pressed(8))
         self.numpad_9.clicked.connect(lambda: self.numpad_pressed(9))
 
-
         self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
         videoWidget = QVideoWidget()
         widget = QWidget(self)
@@ -52,9 +60,14 @@ class Controller(QMainWindow, Ui_mainWindow):
         widget.setLayout(layout)
         self.mediaPlayer.setVideoOutput(videoWidget)
 
-    def power(self):
+    def power(self) -> None:
+        """
+        Method that determines whether buttons have effect when pressed.
+        Upon activation, mediaPlayer displays last known channel.
+        Upon deactivation, mediaPlayer displays a blank/black screen.
+        """
         self.__status = not self.__status
-        if self.__status == True:
+        if self.__status:
             Controller.PWR_STATUS = 'ON'
             self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{self.__channel}.wmv')).absolute()))))
             self.mediaPlayer.play()
@@ -65,8 +78,12 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.label_info.setText('')
         self.label_power.setText(f'Power = {Controller.PWR_STATUS}')
 
-    def volume_up(self):
-        if self.__status == True:
+    def volume_up(self) -> None:
+        """
+        Method to increase current volume of mediaPlayer content.
+        Unmutes when method is called.
+        """
+        if self.__status:
             self.mediaPlayer.setMuted(False)
             self.__volume += 20
             self.mediaPlayer.setVolume(self.__volume)
@@ -74,8 +91,12 @@ class Controller(QMainWindow, Ui_mainWindow):
                 self.__volume = Controller.MAX_VOLUME
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
-    def volume_down(self):
-        if self.__status == True:
+    def volume_down(self) -> None:
+        """
+        Method to decrease current volume of mediaPlayer content.
+        Unmutes when method is called.
+        """
+        if self.__status:
             self.mediaPlayer.setMuted(False)
             self.__volume -= 20
             self.mediaPlayer.setVolume(self.__volume)
@@ -83,7 +104,11 @@ class Controller(QMainWindow, Ui_mainWindow):
                 self.__volume = Controller.MIN_VOLUME
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
-    def mute(self):
+    def mute(self) -> None:
+        """
+        Method that mutes or unmutes mediaPlayer content.
+        Stays muted, until called upon again, even when turning TV on and off or changing channels.
+        """
         if self.__status == True and self.mediaPlayer.isMuted() == False:
             self.mediaPlayer.setMuted(True)
             self.mediaPlayer.setVolume(0)
@@ -92,8 +117,12 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.mediaPlayer.setMuted(False)
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
-    def channel_up(self):
-        if self.__status == True:
+    def channel_up(self) -> None:
+        """
+        Method to decrease current channel number and display new channel.
+        Loops current channel number to MIN_CHANNEL value when increased beyond MAX_CHANNEL value.
+        """
+        if self.__status:
             self.__channel += 1
             if self.__channel > Controller.MAX_CHANNEL:
                 self.__channel = Controller.MIN_CHANNEL
@@ -102,8 +131,12 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.mediaPlayer.play()
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
-    def channel_down(self):
-        if self.__status == True:
+    def channel_down(self) -> None:
+        """
+        Method to decrease current channel number and display new channel.
+        Loops current channel number to MAX_CHANNEL value when decreased below MIN_CHANNEL value.
+        """
+        if self.__status:
             self.__channel -= 1
             if self.__channel < Controller.MIN_CHANNEL:
                 self.__channel = Controller.MAX_CHANNEL
@@ -112,8 +145,13 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.mediaPlayer.play()
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
-    def numpad_pressed(self, numpad_num):
-        if self.__status == True:
+    def numpad_pressed(self, numpad_num: int) -> None:
+        """
+        Method to change channel in accordance with what numpad button is pressed, and
+        warns user of unavailable channel when value of numpad button pressed excedes current MAX_CHANNEL value.
+        :param numpad_num: Number associated with the specific numpad button pressed, int value.
+        """
+        if self.__status:
             if numpad_num in range(Controller.MIN_CHANNEL, Controller.MAX_CHANNEL + 1):
                 if self.__channel != numpad_num:
                     self.__channel = numpad_num
@@ -121,10 +159,14 @@ class Controller(QMainWindow, Ui_mainWindow):
                         QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{numpad_num}.wmv')).absolute()))))
                     self.mediaPlayer.play()
                     self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
+                else:
+                    self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
             else:
                 self.label_info.setText(f'Channel {numpad_num} not currently available')
-    def channel_list(self):
-        if self.__status == True:
-            self.label_info.setText('Channels Available: 1-5')
 
-
+    def channel_list(self) -> None:
+        """
+        Method to display currently available channel numbers ranging between MIN_CHANNEL and MAX_CHANNEL inclusively.
+        """
+        if self.__status:
+            self.label_info.setText(f'Channels Available: {Controller.MIN_CHANNEL}-{Controller.MAX_CHANNEL}')
