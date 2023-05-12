@@ -40,7 +40,6 @@ class Controller(QMainWindow, Ui_mainWindow):
         self.__volume = Controller.MAX_VOLUME
         self.__channel = Controller.MIN_CHANNEL
 
-
         self.button_power.clicked.connect(lambda: self.power())
         self.button_volume_up.clicked.connect(lambda: self.volume_up())
         self.button_volume_down.clicked.connect(lambda: self.volume_down())
@@ -70,6 +69,9 @@ class Controller(QMainWindow, Ui_mainWindow):
         self.mediaPlayer.error.connect(self.handleError)
 
     def handleError(self):
+        """
+        Method that displays to the user an error message if mediaPlayer content cannot be played/displayed correctly.
+        """
         self.label_error.setText("Error: " + self.mediaPlayer.errorString())
 
     def power(self) -> None:
