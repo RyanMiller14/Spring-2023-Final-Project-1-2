@@ -3,6 +3,8 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from pathlib import Path
 from project1_view import *
+import os
+import sys
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
@@ -10,12 +12,18 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 class Controller(QMainWindow, Ui_mainWindow):
     """
-    A class that determines both volume and channel limit values, as well as defines methods for buttons on the GUI.
+    A class that determines both volume and channel limit values, finds the path of the executable, and
+    defines methods for buttons on the GUI.
     """
     MIN_VOLUME = 0
     MAX_VOLUME = 100
     MIN_CHANNEL = 1
     MAX_CHANNEL = 5
+
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    elif __file__:
+        application_path = os.path.dirname(__file__)
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -32,6 +40,7 @@ class Controller(QMainWindow, Ui_mainWindow):
         self.__muted = False
         self.__volume = Controller.MAX_VOLUME
         self.__channel = Controller.MIN_CHANNEL
+
 
         self.button_power.clicked.connect(lambda: self.power())
         self.button_volume_up.clicked.connect(lambda: self.volume_up())
@@ -59,6 +68,10 @@ class Controller(QMainWindow, Ui_mainWindow):
         layout.addWidget(videoWidget)
         widget.setLayout(layout)
         self.mediaPlayer.setVideoOutput(videoWidget)
+        self.mediaPlayer.error.connect(self.handleError)
+
+    def handleError(self):
+        self.label_error.setText("Error: " + self.mediaPlayer.errorString())
 
     def power(self) -> None:
         """
@@ -66,10 +79,12 @@ class Controller(QMainWindow, Ui_mainWindow):
         Upon activation, mediaPlayer displays last known channel.
         Upon deactivation, mediaPlayer displays a blank/black screen.
         """
+        channel = f'channel{self.__channel}.wmv'
+        self.channel_path = os.path.join(Controller.application_path, channel)
         self.__status = not self.__status
         if self.__status:
             Controller.PWR_STATUS = 'ON'
-            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{self.__channel}.wmv')).absolute()))))
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.channel_path)))
             self.mediaPlayer.play()
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
         elif self.__status == False:
@@ -126,8 +141,9 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.__channel += 1
             if self.__channel > Controller.MAX_CHANNEL:
                 self.__channel = Controller.MIN_CHANNEL
-            self.mediaPlayer.setMedia(QMediaContent(
-                QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{self.__channel}.wmv')).absolute()))))
+            channel = f'channel{self.__channel}.wmv'
+            self.channel_path = os.path.join(Controller.application_path, channel)
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.channel_path)))
             self.mediaPlayer.play()
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
@@ -140,8 +156,9 @@ class Controller(QMainWindow, Ui_mainWindow):
             self.__channel -= 1
             if self.__channel < Controller.MIN_CHANNEL:
                 self.__channel = Controller.MAX_CHANNEL
-            self.mediaPlayer.setMedia(QMediaContent(
-                QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{self.__channel}.wmv')).absolute()))))
+            channel = f'channel{self.__channel}.wmv'
+            self.channel_path = os.path.join(Controller.application_path, channel)
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.channel_path)))
             self.mediaPlayer.play()
             self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
 
@@ -155,8 +172,9 @@ class Controller(QMainWindow, Ui_mainWindow):
             if numpad_num in range(Controller.MIN_CHANNEL, Controller.MAX_CHANNEL + 1):
                 if self.__channel != numpad_num:
                     self.__channel = numpad_num
-                    self.mediaPlayer.setMedia(QMediaContent(
-                        QUrl.fromLocalFile(str((Path(__file__).with_name(f'channel{numpad_num}.wmv')).absolute()))))
+                    channel = f'channel{self.__channel}.wmv'
+                    self.channel_path = os.path.join(Controller.application_path, channel)
+                    self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.channel_path)))
                     self.mediaPlayer.play()
                     self.label_info.setText(f'Channel = {self.__channel}  Volume = {self.mediaPlayer.volume()}')
                 else:
