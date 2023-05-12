@@ -69,6 +69,9 @@ class Controller(QMainWindow, Ui_mainWindow):
         self.mediaPlayer.error.connect(self.handleError)
 
     def handleError(self):
+        """
+        Method that displays to the user an error message if mediaPlayer content cannot be played/displayed.
+        """
         self.label_error.setText("Error: " + self.mediaPlayer.errorString())
 
     def power(self) -> None:
